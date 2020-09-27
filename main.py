@@ -4,7 +4,7 @@ Script Name: main.py
 Version: 0.1
 Python Version: 3.6
 Author: Darian Lopez
-Date: 2 June 19
+Date: 27 Sep 20
 
 Purpose:
 The purpose of this program is to use the Natural Language Toolkit to analyze a set of text.
