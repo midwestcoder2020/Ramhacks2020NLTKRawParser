@@ -1,3 +1,9 @@
+## Whats new!?
+
+Added ability to conduct recursive folder searches across documents for desired text
+
+Added ability to split key word text file into individual keyword search terms
+
 # Ramhacks2020NLTKRawParser (Updated 26 Jul 2021)
 NLTKRawParser and Imager
 
