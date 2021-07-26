@@ -1,4 +1,4 @@
-# Ramhacks2020NLTKRawParser
+# Ramhacks2020NLTKRawParser (Updated 26 Jul 2021)
 NLTKRawParser and Imager
 
 (Best Digital Forensics Hack)
