@@ -28,10 +28,13 @@ from gooey import Gooey
 from gooey import GooeyParser
 import os
 import time
+from init import initApp
+
+initApp()
 
 @Gooey(optional_cols=1, program_name="Python NLTK Parser and Imager")
 def main():
-    desc = "Create Mahcine Learning based search phrases. Then search accross raw data for them!"
+    desc = "Create Machine Learning based search phrases. Then search across raw data for them!"
     parser = GooeyParser(description=desc, add_help=False)
     parser.add_argument('--verbose', help='be verbose', dest='verbose',
                         action='store_true', default=True)
@@ -47,6 +50,11 @@ def main():
     parser_two.add_argument('--Source-File',default='',widget='FileChooser',help='Select the File/Data to copy')
     parser_two.add_argument('--Destination-Folder',default='',widget='DirChooser',help='Select where to save the copied data')
     parser_two.add_argument('--RawDiskName', default="", widget="TextField", help='Optional - Enter Your Raw Disk Drive Number you want to use ie 1,2,3,4....')
+
+    parser_three = subs.add_parser('recursiveFileSearch', prog="Recursive File Search", help='Search across a collection of files in a Directory/Unzipped Extraction Folder at the binary level')
+    parser_three.add_argument('--Target-Folder',default='',widget='DirChooser',help='Select your target folder to scan')
+    parser_three.add_argument("--Text-File-Source", default="", widget='FileChooser', help='Select The Text (txt) Document for the program to analyze')
+
 
     args = parser.parse_args()
 
@@ -95,7 +103,25 @@ def main():
 
                 print("Checking for phrases {}".format(values))
 
-                searchRawData(values,dSearch)
+                tList = " ".join(values).split(",")
+                searchRawData(tList,dSearch)
+
+    elif args.command == 'recursiveFileSearch':
+
+        dTarget = args.Target_Folder
+        tFile = args.Text_File_Source
+        print("Checking folder {}".format(dTarget))
+
+        try:
+            values = initSearchValuesfromTextFile(tFile)
+        except Exception as e:
+            print(e)
+            print("unable to generate values from file")
+            return
+
+        folderFileSearch(dTarget,values)
+
+
 
 
 
@@ -136,6 +162,7 @@ def initSearchValuesfromTextFile(file):
     with open(file, encoding='utf-8', errors="ignore")as f:
         text = f.read()
         stop_words = set(stopwords.words("english"))
+        # newTokenWords = sent_tokenize(" ".join([word for word in sent_tokenize(text) if word not in stop_words]))
         newTokenWords = sent_tokenize(" ".join([word for word in sent_tokenize(text) if word not in stop_words]))
         # print(text)
         print('\n')
@@ -167,11 +194,8 @@ def searchRawData(termList,data):
                     if block:
                         placeHolder = placeHolder + 1024
                         try:
-                            print(block.decode("utf-8"))
-                            if str(w) in block.decode('utf-8'):
-                                if placeHolder not in blocksFound:
-                                    blocksFound.append(placeHolder)
-                                    report("{} found".format(w),placeHolder)
+                            if w.lower() in block.decode('utf-8').lower():
+                                report("{} found".format(w),placeHolder)
                         except:
                             pass
                     else:
@@ -179,11 +203,71 @@ def searchRawData(termList,data):
         f.close()
 
 
+def searchRawDataFiles(termList,data,isFileOnly=False):
+
+    print("raw data search")
+
+    blocksFound = []
+    filesFound = []
+
+    for w in termList:
+        print("Looking for {} in {}".format(w,data))
+        done = False
+        placeHolder = 0
+        with open(data, 'rb') as f:
+            while not done:
+                try:
+                    block = f.read(1024)
+                except Exception as e:
+                    print(e)
+                    break
+                finally:
+                    if block:
+                        placeHolder = placeHolder + 1024
+                        try:
+                            if w.lower() in block.decode('utf-8').lower():
+                                print(w+" found")
+                                if isFileOnly:
+                                    tDict = data + "_" + w
+                                    if not tDict in filesFound:
+                                        print("adding to list!")
+                                        filesFound.append(tDict)
+
+
+                                    else:
+                                        pass
+                                        #report("{} found in ".format(w),placeHolder)
+                        except:
+                            pass
+                    else:
+                        done = True
+        f.close()
+        for entry in filesFound:
+            #print(entry)
+            reportFiles("{} found".format(entry),data)
+
+def folderFileSearch(folder,termList):
+    fList=[]
+    tList = " ".join(termList).split(",")
+    for root, dir, files in os.walk(folder):
+        for name in files:
+            tName = os.path.join(root, name)
+
+            fList.append(tName)
+
+    #print(tList)
+    for f in fList:
+        searchRawDataFiles(tList,f,isFileOnly=True)
 
 def report(text,blockNum):
 
     with open("report.txt",'a+') as f:
         f.write(str(blockNum) +" | "+text+'\n')
+    f.close()
+def reportFiles(text,fileName):
+
+    with open("reportFiles.txt",'a+') as f:
+        f.write(fileName+" | "+text+'\n')
     f.close()
 
 def hashItOut(file):
